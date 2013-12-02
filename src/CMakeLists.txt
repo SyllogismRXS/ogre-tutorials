@@ -1,0 +1,8 @@
+add_subdirectory(hello-world)
+add_subdirectory(tiny-ogre)
+add_subdirectory(tut-1)
+add_subdirectory(tut-2)
+add_subdirectory(tut-3)
+add_subdirectory(sphere)
+#add_subdirectory(madmarx-1)
+
