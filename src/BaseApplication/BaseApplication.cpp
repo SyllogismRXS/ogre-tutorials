@@ -279,8 +279,16 @@ bool BaseApplication::frameRenderingQueued(const Ogre::FrameEvent& evt)
           }
      }
 
+     frame_loop();
+
      return true;
 }
+
+void BaseApplication::frame_loop()
+{
+     // overide me
+}
+
 //-------------------------------------------------------------------------------------
 bool BaseApplication::keyPressed( const OIS::KeyEvent &arg )
 {

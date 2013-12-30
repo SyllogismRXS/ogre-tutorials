@@ -4,5 +4,6 @@ add_subdirectory(tut-1)
 add_subdirectory(tut-2)
 add_subdirectory(tut-3)
 add_subdirectory(sphere)
+add_subdirectory(exp-1)
 #add_subdirectory(madmarx-1)
 
