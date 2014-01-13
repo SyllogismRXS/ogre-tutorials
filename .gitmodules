@@ -1,0 +1,9 @@
+[submodule "gol"]
+	path = gol
+	url = git@github.com:SyllogismRXS/game-of-life.git/src/gol
+[submodule "test"]
+	path = test
+	url = git@github.com:SyllogismRXS/game-of-life.git
+[submodule "src/game-of-life"]
+	path = src/game-of-life
+	url = git@github.com:SyllogismRXS/game-of-life.git

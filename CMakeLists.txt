@@ -95,6 +95,15 @@ set(CMAKE_DEBUG_POSTFIX "_d")
  
 set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_BINARY_DIR}/dist")
  
+set(Boost_USE_STATIC_LIBS ON) 
+set(Boost_USE_MULTITHREADED ON)  
+set(Boost_USE_STATIC_RUNTIME ON) 
+find_package(Boost 1.46.0) 
+if(Boost_FOUND)
+  include_directories(${Boost_INCLUDE_DIRS}) 
+  #target_link_libraries(progname ${Boost_LIBRARIES})
+endif()
+
 find_package(OGRE REQUIRED)
 #find_package(OGRE COMPONENTS Overlay)
  
@@ -139,14 +148,15 @@ if (NOT OGRE_BUILD_PLATFORM_IPHONE)
 	set(OGRE_LIBRARIES ${OGRE_LIBRARIES} ${Boost_LIBRARIES})
 endif()
 
-message("======>   <=====")
-message("${OGRE_INCLUDE_DIRS}")
+#message("======>   <=====")
+#message("${OGRE_INCLUDE_DIRS}")
 
 include_directories( ${OIS_INCLUDE_DIRS}
 	${OGRE_INCLUDE_DIRS}
 	${OGRE_SAMPLES_INCLUDEPATH}
 )
 
-
+# include the game of life includes
+include_directories( ${OGRE_TUT_SRC_DIR}/game-of-life/include )
 
 add_subdirectory(src)
