@@ -159,4 +159,13 @@ include_directories( ${OIS_INCLUDE_DIRS}
 # include the game of life includes
 include_directories( ${OGRE_TUT_SRC_DIR}/game-of-life/include )
 
+# Check for existence of Leap motion environment variables
+if(DEFINED ENV{LEAP_ROOT})
+  include_directories($ENV{LEAP_ROOT}/include)
+  set (LEAP_LIBS $ENV{LEAP_ROOT}/lib/x86/libLeap.so)
+else()
+  message ("=======================================================")
+  message (FATAL_ERROR "LEAP_ROOT environment variable not set")
+endif()
+
 add_subdirectory(src)

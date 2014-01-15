@@ -4,6 +4,7 @@ file (GLOB SRCS *.cpp)
 file (GLOB HDRS *.h)
 
 # Find super class' headers and sources
+#file (GLOB SUPER_SRCS "../BaseApplication/BaseApplication.cpp")
 file (GLOB SUPER_SRCS "../BaseApplication/*.cpp")
 file (GLOB SUPER_HDRS "../BaseApplication/*.h")
 
@@ -16,7 +17,7 @@ add_executable(${APP_NAME} ${HDRS} ${SRCS})
 target_link_libraries(${APP_NAME} 
   ${OGRE_LIBRARIES} 
   ${OIS_LIBRARIES}
-  gol
+  gol  
   )
 
 

@@ -13,7 +13,7 @@ set( HDRS ${HDRS} ${SUPER_HDRS})
 
 add_executable(${APP_NAME} ${HDRS} ${SRCS})
 
-target_link_libraries(${APP_NAME} ${OGRE_LIBRARIES} ${OIS_LIBRARIES})
+target_link_libraries(${APP_NAME} ${OGRE_LIBRARIES} ${OIS_LIBRARIES} ${LEAP_LIBS})
 
 
 # Link executable to other libraries

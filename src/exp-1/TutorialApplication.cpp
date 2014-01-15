@@ -17,10 +17,6 @@
 #include "TutorialApplication.h"
 #include <OgreSphere.h>
 
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/variate_generator.hpp>
-
 #if OGRE_PLATFORM == OGRE_PLATFORM_APPLE_IOS || OGRE_PLATFORM == OGRE_PLATFORM_APPLE
 #   include <macUtils.h>
 #   include "AppDelegate.h"
@@ -106,12 +102,15 @@ TutorialApplication::TutorialApplication(void)
      gol_->randomize();          
 
      mTimer = OGRE_NEW Ogre::Timer();
-     mTimer->reset();
+     mTimer->reset();     
 }
 //-------------------------------------------------------------------------------------
 TutorialApplication::~TutorialApplication(void)
 {
      delete gol_;
+
+     // close the library
+     dlclose(leapglue_);     
 }
 
 //-------------------------------------------------------------------------------------
@@ -184,28 +183,67 @@ void TutorialApplication::createScene(void)
                //}
           }
      }         
+     
+     // load the LeapGlue Library
+     leapglue_ = dlopen("../lib/libLeapGlue.so", RTLD_LAZY);
+     if (!leapglue_) {
+          std::cerr << "Cannot load library: " << dlerror() << '\n';
+          return ;
+     }
 
-     ////Ogre::Sphere* sphere(Ogre::Vector3( 100, 100, 0 ), 50);
-     //Ogre::Entity* sphereEntity = mSceneMgr->createEntity("mySphere", Ogre::SceneManager::PT_SPHERE);
-     //Ogre::SceneNode* sphereNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-     //sphereNode->attachObject(sphereEntity);     
-     //
-     //double radius = sphereEntity->getBoundingRadius(); 
-     ////sphereNode->scale(radius*10, radius*10, radius*10);
-     //sphereNode->scale(100, 100, 100);
-     //
-     ////Ogre::Materiaal * material = Ogre::MaterialManager::create("SphereMaterial", "group");
-     //Ogre::MaterialPtr RobotMaterialPtr = Ogre::MaterialManager::getSingleton().create("RobotSphereMaterial","group"); 
-     ////RobotMaterialPtr->setSelfIllumination(1,0,0); 
-     ////sphereEntity->setMaterialName("RobotSphereMaterial"); 
-     //
-     //
-     ////Ogre::SceneNode* sphereNode = mSceneMgr->create
-     ////createEntity(Ogre::Vector3( 100, 100, 0 ), 50);
+     // reset errors
+     dlerror();         
+     
+     poll_frame_ = (poll_frame_t) dlsym(leapglue_, "poll_frame");
+     const char *dlsym_error = dlerror();
+     if (dlsym_error) {
+          std::cerr << "Cannot load symbol 'poll_frame': " << dlsym_error <<
+               '\n';
+          dlclose(leapglue_);
+          return;
+     }             
 }
 
 void TutorialApplication::frame_loop()
-{         
+{      
+     if ((*poll_frame_)(leap_packet_)) {          
+          if (leap_packet_.valid && prev_leap_packet_.valid) {               
+               if (leap_packet_.hands > 0) {
+                    double pitch_diff = leap_packet_.first.pitch;
+                    double yaw_diff = 0 - leap_packet_.first.yaw;
+                    double roll_diff = leap_packet_.first.roll;
+                    
+                    if (prev_leap_packet_.hands > 0) {
+                         pitch_diff = leap_packet_.first.pitch - prev_leap_packet_.first.pitch;
+                         yaw_diff = prev_leap_packet_.first.yaw - leap_packet_.first.yaw;
+                         roll_diff = leap_packet_.first.roll - prev_leap_packet_.first.roll;                    
+                         
+                    } 
+                    mCamera->pitch(Ogre::Radian(pitch_diff*SYLLO_PI/180.0));
+                    mCamera->yaw(Ogre::Radian(yaw_diff*SYLLO_PI/180.0));
+                    mCamera->roll(Ogre::Radian(roll_diff*SYLLO_PI/180.0));
+               }
+          }          
+
+          if (leap_packet_.hands == 0 && prev_leap_packet_.hands > 0) {
+               mCamera->setPosition(Ogre::Vector3(cols_/2*100, rows_/2*100 ,2000));
+               mCamera->lookAt(Ogre::Vector3(cols_/2*100, rows_/2*100,-300));
+          }
+
+          prev_leap_packet_ = leap_packet_;
+     }     
+     
+     // REALLY COOL ROTATION EFFECT!
+     //if ((*poll_frame_)(leap_packet_)) {          
+     //     if (leap_packet_.hands > 0) {
+     //          pitch_ = 0;
+     //          //cout << "Pitch: " << leap_packet_.first.pitch << endl;               
+     //          //mCamera->pitch(Ogre::Radian(leap_packet_.first.pitch*SYLLO_PI/180.0));
+     //     }
+     //}
+     ////mCamera->pitch(Ogre::Radian(pitch_*SYLLO_PI/180.0));
+     //mCamera->roll(Ogre::Radian(pitch_*SYLLO_PI/180.0));     
+   
      bool update_gol = false;
      if (gol_timer_.getMilliseconds() > 4000) {
      gol_timer_.reset();

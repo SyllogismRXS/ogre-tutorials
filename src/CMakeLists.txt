@@ -1,3 +1,4 @@
+add_subdirectory(LeapGlue)
 add_subdirectory(game-of-life)
 add_subdirectory(hello-world)
 add_subdirectory(tiny-ogre)

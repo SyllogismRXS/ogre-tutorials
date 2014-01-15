@@ -19,15 +19,12 @@
 
 #include <iostream>
 #include <BaseApplication/BaseApplication.h>
+#include <LeapGlue/LeapGlue.h>
 #include <gol/GOL.h>
 
 #include <stdio.h>
 #include <stdlib.h> 
 #include <time.h>
-
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/variate_generator.hpp>
 
 using std::cout;
 using std::endl;
@@ -98,6 +95,15 @@ protected:
      std::map<std::string,Ogre::MaterialPtr> colors_;
      
      int frame_;
+
+     double pitch_;
+
+     void *leapglue_;
+     typedef bool (*poll_frame_t)(LeapPacket_t&);
+     poll_frame_t poll_frame_;
+     LeapPacket_t leap_packet_;
+     LeapPacket_t prev_leap_packet_;
+     
 };
 
 std::string color_number(double r, double g, double b);
