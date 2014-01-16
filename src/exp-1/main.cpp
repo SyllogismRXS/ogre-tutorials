@@ -1,5 +1,5 @@
 #include <iostream>
-#include "TutorialApplication.h"
+#include "MyBigBangApp.h"
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_APPLE_IOS || OGRE_PLATFORM == OGRE_PLATFORM_APPLE
 #   include <macUtils.h>
@@ -38,7 +38,7 @@ extern "C" {
           return retVal;
 #else
           // Create application object
-          TutorialApplication app;
+          MyBigBangApp app;
 
           try {
                app.go();

@@ -1,6 +1,6 @@
 /*
   -----------------------------------------------------------------------------
-  Filename:    TutorialApplication.h
+  Filename:    MyBigBangApp.h
   -----------------------------------------------------------------------------
 
   This source file is part of the
@@ -14,8 +14,8 @@
   http://www.ogre3d.org/tikiwiki/
   -----------------------------------------------------------------------------
 */
-#ifndef __TutorialApplication_h_
-#define __TutorialApplication_h_
+#ifndef __MyBigBangApp_h_
+#define __MyBigBangApp_h_
 
 #include <iostream>
 #include <BaseApplication/BaseApplication.h>
@@ -95,11 +95,11 @@ protected:
 private:
 };
 
-class TutorialApplication : public BaseApplication
+class MyBigBangApp : public BaseApplication
 {
 public:
-     TutorialApplication(void);
-     virtual ~TutorialApplication(void);
+     MyBigBangApp(void);
+     virtual ~MyBigBangApp(void);
 
      Ogre::RenderWindow * getWindow(void) { return mWindow; }
      OIS::Mouse * getMouse(void) { return mMouse; }
@@ -141,4 +141,4 @@ protected:
 
 std::string color_number(double r, double g, double b);
 
-#endif // #ifndef __TutorialApplication_h_
+#endif // #ifndef __MyBigBangApp_h_

@@ -1,6 +1,6 @@
 /*
   -----------------------------------------------------------------------------
-  Filename:    TutorialApplication.cpp
+  Filename:    MyBigBangApp.cpp
   -----------------------------------------------------------------------------
 
   This source file is part of the
@@ -14,7 +14,7 @@
   http://www.ogre3d.org/tikiwiki/
   -----------------------------------------------------------------------------
 */
-#include "TutorialApplication.h"
+#include "MyBigBangApp.h"
 #include <OgreSphere.h>
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_APPLE_IOS || OGRE_PLATFORM == OGRE_PLATFORM_APPLE
@@ -188,7 +188,7 @@ void MyNode::ball_animate(int time)
 }
 
 //-------------------------------------------------------------------------------------
-TutorialApplication::TutorialApplication(void)
+MyBigBangApp::MyBigBangApp(void)
 {
      srand(time(0));
 
@@ -212,7 +212,7 @@ TutorialApplication::TutorialApplication(void)
 
 }
 //-------------------------------------------------------------------------------------
-TutorialApplication::~TutorialApplication(void)
+MyBigBangApp::~MyBigBangApp(void)
 {
      delete gol_;
 
@@ -220,7 +220,7 @@ TutorialApplication::~TutorialApplication(void)
      dlclose(leapglue_);     
 }
 
-void TutorialApplication::setup_Ball()
+void MyBigBangApp::setup_Ball()
 {
      mCamera->setPosition(Ogre::Vector3(0, 0 ,2000));
      
@@ -238,7 +238,7 @@ void TutorialApplication::setup_Ball()
      }
 }
 
-void TutorialApplication::setup_GameOfLife()
+void MyBigBangApp::setup_GameOfLife()
 {
      mCamera->setPosition(Ogre::Vector3(cols_/2*100, rows_/2*100 ,2000));
      
@@ -257,7 +257,7 @@ void TutorialApplication::setup_GameOfLife()
 }
 
 //-------------------------------------------------------------------------------------
-void TutorialApplication::createScene(void)
+void MyBigBangApp::createScene(void)
 {         
      // Create map of colors:
      for(double r = 0; r <= 1.05; r += COLOR_STEP) {
@@ -328,7 +328,7 @@ void TutorialApplication::createScene(void)
      }             
 }
 
-void TutorialApplication::animate()
+void MyBigBangApp::animate()
 {
      for(int x = 0; x < gol_->x_width(); x++) {
           for(int y = 0; y < gol_->y_height(); y++) {
@@ -353,7 +353,7 @@ void TutorialApplication::animate()
           }                         
      }
 }
-void TutorialApplication::game_of_life()
+void MyBigBangApp::game_of_life()
 {
      bool update_gol = false;
      if (gol_timer_.getMilliseconds() > 4000) {
@@ -394,7 +394,7 @@ void TutorialApplication::game_of_life()
 }
 
 
-void TutorialApplication::frame_loop()
+void MyBigBangApp::frame_loop()
 {    
      bool hand_present = false;
      ////////////////////////////////////////////////////////////////////////
