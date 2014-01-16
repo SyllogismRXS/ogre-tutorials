@@ -28,16 +28,92 @@ using std::endl;
 MyNode::MyNode()
 {
      max_size_ = 1;
-     size_step_ = 0.01;
-     
-     //this->reset();
-     //x_size_ = ((rand() % 9)+1) / 10.0;
-     //y_size_ = x_size_;
-     //z_size_ = x_size_;
-     //cout << x_size_ << endl;
+     size_step_ = 0.01;         
 }
 
-void MyNode::reset()
+void MyNode::reset_ball_animate()
+{    
+     dying_ = false;
+
+     x_size_ = 0;
+     y_size_ = 0;
+     z_size_ = 0;
+
+     pos_ = scene_node_->getPosition();     
+     
+     //x_amp_ = (rand() % max_amp) - max_amp / 2.0;
+     //y_amp_ = (rand() % max_amp) - max_amp / 2.0;
+     //z_amp_ = (rand() % max_amp) - max_amp / 2.0;     
+          
+     //x_freq_ = (rand() % max_freq);
+     //y_freq_ = (rand() % max_freq);
+     //z_freq_ = (rand() % max_freq);     
+    
+     // Types of early entities:
+     // 1. Perfect circles
+     //    same phases, same amps, same freq
+     // 2. Ellipses
+     //    same phases, different amps, same freq
+     // 3. Crazy entities
+     //    different phases, amps, freqs
+     
+     int max_amp = 500;
+     int max_freq = 1;
+     //double freq = 0.2;
+
+     int type = rand() % 100 + 1;    
+     if (type >= 95  && type <= 100) {
+          // Crazy entities          
+          x_phase_ = (rand() % 314) / 100.0;
+          y_phase_ = (rand() % 314) / 100.0;
+          z_phase_ = (rand() % 314) / 100.0;
+     
+          x_amp_ = (rand() % max_amp) - max_amp / 2.0;
+          y_amp_ = (rand() % max_amp) - max_amp / 2.0;
+          z_amp_ = (rand() % max_amp) - max_amp / 2.0;
+     
+          x_freq_ = rand() % (max_freq*5);
+          y_freq_ = rand() % (max_freq*5);
+          z_freq_ = rand() % (max_freq*5);
+     } else if (type >= 80 && type <= 90) {
+          // Ellipses          
+          // Perfect circle
+          x_phase_ = (rand() % 314) / 100.0;
+          y_phase_ = x_phase_;
+          z_phase_ = x_phase_;
+     
+          double amp_multi = 2;
+          x_amp_ = (rand() % max_amp*amp_multi) - max_amp*amp_multi / 2.0;
+          y_amp_ = (rand() % max_amp*amp_multi) - max_amp*amp_multi / 2.0;;
+          z_amp_ = (rand() % max_amp*amp_multi) - max_amp*amp_multi / 2.0;
+
+          //x_freq_ = rand() % max_freq;
+          x_freq_ = (rand() % 300) / 100.0 - 1.5;
+          y_freq_ = x_freq_;
+          z_freq_ = x_freq_;
+     } else {          
+          // Perfect circle
+          x_phase_ = (rand() % 314) / 100.0;
+          y_phase_ = x_phase_;
+          z_phase_ = x_phase_;
+     
+          x_amp_ = (rand() % max_amp) - max_amp / 2.0;
+          y_amp_ = x_amp_;
+          z_amp_ = (rand() % max_amp) - max_amp / 2.0;
+
+          //x_freq_ = rand() % max_freq;
+          x_freq_ = (rand() % 200) / 100.0 - 1.0;
+          y_freq_ = x_freq_;
+          z_freq_ = x_freq_;
+     }      
+     
+     //double color_r = (rand() % COLOR_RAND_MAX) * COLOR_STEP;
+     //double color_g = (rand() % COLOR_RAND_MAX) * COLOR_STEP;
+     //double color_b = (rand() % COLOR_RAND_MAX) * COLOR_STEP;
+     ent_->setMaterialName(color_number(0,0,1.0));
+}
+
+void MyNode::reset_game_of_life()
 {    
      dying_ = false;
 
@@ -46,11 +122,19 @@ void MyNode::reset()
      z_size_ = 0;
 
      pos_ = scene_node_->getPosition();
-     
+               
      x_phase_ = (rand() % 314) / 100.0;
      y_phase_ = (rand() % 314) / 100.0;
      z_phase_ = (rand() % 314) / 100.0;
      
+     x_amp_ = (rand() % 100) / 100.0 - 0.5;
+     y_amp_ = (rand() % 100) / 100.0 - 0.5;
+     z_amp_ = (rand() % 100) / 100.0 - 0.5;
+
+     //x_freq_ = rand() % max_freq;
+     x_freq_ = (rand() % 200) / 100.0 - 1.0;
+     y_freq_ = x_freq_;
+     z_freq_ = x_freq_;
      
      //double color_r = (rand() % COLOR_RAND_MAX) * COLOR_STEP;
      //double color_g = (rand() % COLOR_RAND_MAX) * COLOR_STEP;
@@ -58,10 +142,9 @@ void MyNode::reset()
      ent_->setMaterialName(color_number(0,0,1.0));
 }
 
-void MyNode::step_animate(int time)
+
+void MyNode::game_of_life(int time)
 {
-     //int t = (time % 1000);
-     //x_size_ = sin(t);
      if (dying_) {
           if (x_size_ > -size_step_) {
                x_size_ -= size_step_*3;
@@ -77,12 +160,31 @@ void MyNode::step_animate(int time)
      }
      scene_node_->setScale(Ogre::Vector3(x_size_,y_size_,z_size_));
      
-
      double t = (time % 1000) / 1000.0;
-     pos_.y += 0.6*sin(2*SYLLO_PI*t + y_phase_);
-     pos_.x += 0.6*sin(2*SYLLO_PI*t + x_phase_);
+     pos_.x += 0.4*sin(2*SYLLO_PI*t + x_phase_);
+     pos_.y += 0.5*sin(2*SYLLO_PI*t + y_phase_);     
      pos_.z += 0.4*sin(2*SYLLO_PI*t + z_phase_);
+     //double t = time / 1000.0;     
+     //pos_.x += x_amp_*sin(2*SYLLO_PI*x_freq_*t + x_phase_);
+     //pos_.y += y_amp_*cos(2*SYLLO_PI*y_freq_*t + y_phase_);
+     //pos_.z += z_amp_*sin(2*SYLLO_PI*z_freq_*t + z_phase_);
      scene_node_->setPosition(pos_.x, pos_.y, pos_.z);
+}
+
+void MyNode::ball_animate(int time)
+{
+     //double t = (time % 1000) / 1000.0;     
+     //double t = (time % 1000) / 1000.0;
+     double t = time / 1000.0;
+     //double t = (time % 1000) / 10.0;     
+     //double t = time;
+     //pos_.x += x_amp_*sin(2*SYLLO_PI*x_freq_*t + x_phase_);
+     //pos_.y += y_amp_*sin(2*SYLLO_PI*y_freq_*t + y_phase_);
+     //pos_.z += z_amp_*sin(2*SYLLO_PI*z_freq_*t + z_phase_);
+     pos_.x = x_amp_*sin(2*SYLLO_PI*x_freq_*t + x_phase_);
+     pos_.y = y_amp_*cos(2*SYLLO_PI*y_freq_*t + y_phase_);
+     pos_.z = z_amp_*sin(2*SYLLO_PI*z_freq_*t + z_phase_);
+     scene_node_->setPosition(pos_.x, pos_.y, pos_.z);     
 }
 
 //-------------------------------------------------------------------------------------
@@ -93,7 +195,14 @@ TutorialApplication::TutorialApplication(void)
      rows_ = 50;
      cols_ = 50;
 
+     //rows_ = 5;
+     //cols_ = 5;
+
      frame_ = 0;
+
+     state_ = GameOfLife_Entry;
+     //state_ = Ball;
+     next_state_ = state_;
 
      gol_timer_.reset();
      animate_timer_.reset();
@@ -101,8 +210,6 @@ TutorialApplication::TutorialApplication(void)
      gol_ = new GOL(cols_, rows_);
      gol_->randomize();          
 
-     mTimer = OGRE_NEW Ogre::Timer();
-     mTimer->reset();     
 }
 //-------------------------------------------------------------------------------------
 TutorialApplication::~TutorialApplication(void)
@@ -113,15 +220,45 @@ TutorialApplication::~TutorialApplication(void)
      dlclose(leapglue_);     
 }
 
+void TutorialApplication::setup_Ball()
+{
+     mCamera->setPosition(Ogre::Vector3(0, 0 ,2000));
+     
+     for(int x = 0; x < gol_->x_width(); x++) {
+          for(int y = 0; y < gol_->y_height(); y++) {
+               MyNode *node;
+               node = (MyNode*)(gol_->at(x,y).data());
+               
+               Ogre::SceneNode *scene_node;
+               scene_node = node->scene_node();
+               scene_node->setPosition(Ogre::Vector3(0,0,0));
+               
+               node->reset_ball_animate();               
+          }
+     }
+}
+
+void TutorialApplication::setup_GameOfLife()
+{
+     mCamera->setPosition(Ogre::Vector3(cols_/2*100, rows_/2*100 ,2000));
+     
+     for(int x = 0; x < gol_->x_width(); x++) {
+          for(int y = 0; y < gol_->y_height(); y++) {
+               MyNode *node;               
+               node = (MyNode*)(gol_->at(x,y).data());               
+
+               Ogre::SceneNode *scene_node;
+               scene_node = node->scene_node();
+               scene_node->setPosition(Ogre::Vector3(x*100,y*100,0));
+
+               node->reset_game_of_life();
+          }
+     }
+}
+
 //-------------------------------------------------------------------------------------
 void TutorialApplication::createScene(void)
-{    
-     mCamera->setPosition(Ogre::Vector3(cols_/2*100, rows_/2*100 ,2000));
-     //Ogre::ColourValue fadeColour(0.05, 0.05, 0.05);
-     //Ogre::ColourValue fadeColour2(0.9, 0.9, 0.9);
-     //mWindow->getViewport(0)->setBackgroundColour(fadeColour);
-     //mSceneMgr->setFog(Ogre::FOG_LINEAR, fadeColour2, 0, 1000, 2000);
-
+{         
      // Create map of colors:
      for(double r = 0; r <= 1.05; r += COLOR_STEP) {
           for(double g= 0; g <= 1.05; g += COLOR_STEP) {
@@ -138,18 +275,13 @@ void TutorialApplication::createScene(void)
           }
      }
 
-
      mSceneMgr->setAmbientLight(Ogre::ColourValue(0.1f, 0.1f, 0.1f));
-     //mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5f, 0.5f, 0.5f));
-     //mSceneMgr->setAmbientLight(Ogre::ColourValue(1.0f, 1.0f, 1.0f));
      
      Ogre::Light* light = mSceneMgr->createLight( "MainLight" );
      light->setPosition(20, 80, 50);
      
      Ogre::Light* light_second = mSceneMgr->createLight( "SecondLight" );
-     light_second->setPosition(cols_/2*100, rows_/2*100,1000);     
-     //std::map<std::string,Ogre::MaterialPtr>::iterator it;
-     //it = colors_.begin();
+     light_second->setPosition(cols_/2*100, rows_/2*100,1000);          
      
      for (int r = 0; r < rows_; r++) {
           for (int c = 0 ; c < cols_; c++) {
@@ -161,28 +293,20 @@ void TutorialApplication::createScene(void)
                Ogre::Entity * mBall = mSceneMgr->createEntity(name, Ogre::SceneManager::PT_SPHERE);
                Ogre::SceneNode *ballNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
                               
-               mBall->setMaterialName(color_number(0,0,1.0));
-               //mBall->setMaterialName("RGB:0.95,0,0");
-               //mBall->setMaterialName("Examples/Ice");
-               //mBall->setMaterialName((*it).first);               
-
+               mBall->setMaterialName(color_number(0,0,1.0));               
                ballNode->attachObject(mBall);
                ballNode->setPosition(Ogre::Vector3(c*100,r*100,0));
+               //ballNode->setPosition(Ogre::Vector3(0,0,0));
                ballNode->setScale(Ogre::Vector3(1,1,1)); // Radius, in theory.
                
                MyNode *node = new MyNode();
                node->set_entity(mBall);
                node->set_scene_node(ballNode);
                gol_->at(c,r).set_data((void*)node);
-               node->reset();
-
-               //if (it != colors_.end()) {
-               //     it++;
-               //} else {
-               //     it = colors_.begin();
-               //}
+               //node->reset_ball_animate();               
+               //node->reset_game_of_life();
           }
-     }         
+     } 
      
      // load the LeapGlue Library
      leapglue_ = dlopen("../lib/libLeapGlue.so", RTLD_LAZY);
@@ -204,52 +328,38 @@ void TutorialApplication::createScene(void)
      }             
 }
 
-void TutorialApplication::frame_loop()
-{      
-     if ((*poll_frame_)(leap_packet_)) {          
-          if (leap_packet_.valid && prev_leap_packet_.valid) {               
-               if (leap_packet_.hands > 0) {
-                    double pitch_diff = leap_packet_.first.pitch;
-                    double yaw_diff = 0 - leap_packet_.first.yaw;
-                    double roll_diff = leap_packet_.first.roll;
-                    
-                    if (prev_leap_packet_.hands > 0) {
-                         pitch_diff = leap_packet_.first.pitch - prev_leap_packet_.first.pitch;
-                         yaw_diff = prev_leap_packet_.first.yaw - leap_packet_.first.yaw;
-                         roll_diff = leap_packet_.first.roll - prev_leap_packet_.first.roll;                    
-                         
-                    } 
-                    mCamera->pitch(Ogre::Radian(pitch_diff*SYLLO_PI/180.0));
-                    mCamera->yaw(Ogre::Radian(yaw_diff*SYLLO_PI/180.0));
-                    mCamera->roll(Ogre::Radian(roll_diff*SYLLO_PI/180.0));
+void TutorialApplication::animate()
+{
+     for(int x = 0; x < gol_->x_width(); x++) {
+          for(int y = 0; y < gol_->y_height(); y++) {
+               MyNode *node;
+               //Ogre::Entity * ent;
+               node = (MyNode*)(gol_->at(x,y).data());
+               //ent = node->entity();
+               
+               switch(state_) {
+               case Ball:
+                    node->ball_animate(animate_timer_.getMilliseconds());
+                    break;
+               case BeforeBang:
+                    break;
+               case GameOfLife:
+                    cout << "Error: shouldn't happen" << endl;
+                    break;
+               default:
+                    break;
                }
-          }          
-
-          if (leap_packet_.hands == 0 && prev_leap_packet_.hands > 0) {
-               mCamera->setPosition(Ogre::Vector3(cols_/2*100, rows_/2*100 ,2000));
-               mCamera->lookAt(Ogre::Vector3(cols_/2*100, rows_/2*100,-300));
-          }
-
-          prev_leap_packet_ = leap_packet_;
-     }     
-     
-     // REALLY COOL ROTATION EFFECT!
-     //if ((*poll_frame_)(leap_packet_)) {          
-     //     if (leap_packet_.hands > 0) {
-     //          pitch_ = 0;
-     //          //cout << "Pitch: " << leap_packet_.first.pitch << endl;               
-     //          //mCamera->pitch(Ogre::Radian(leap_packet_.first.pitch*SYLLO_PI/180.0));
-     //     }
-     //}
-     ////mCamera->pitch(Ogre::Radian(pitch_*SYLLO_PI/180.0));
-     //mCamera->roll(Ogre::Radian(pitch_*SYLLO_PI/180.0));     
-   
+               
+          }                         
+     }
+}
+void TutorialApplication::game_of_life()
+{
      bool update_gol = false;
      if (gol_timer_.getMilliseconds() > 4000) {
-     gol_timer_.reset();
+          gol_timer_.reset();
           update_gol = true;
      }
-     
 
      for(int x = 0; x < gol_->x_width(); x++) {
           for(int y = 0; y < gol_->y_height(); y++) {
@@ -257,14 +367,14 @@ void TutorialApplication::frame_loop()
                Ogre::Entity * ent;
                node = (MyNode*)(gol_->at(x,y).data());
                ent = node->entity();
-
-               node->step_animate(animate_timer_.getMilliseconds());
+               
+               node->game_of_life(animate_timer_.getMilliseconds());
 
                if (update_gol) {                    
                     if (gol_->at(x,y).grid_type() == 1) {
                          ent->setVisible(true);
                          if (gol_->at(x,y).is_new()) {
-                              node->reset();
+                              node->reset_game_of_life();
                          }
                     } else {
                          node->kill();    
@@ -281,40 +391,110 @@ void TutorialApplication::frame_loop()
      if (update_gol) {
           gol_->step();
      }
-     frame_++;
+}
+
+
+void TutorialApplication::frame_loop()
+{    
+     bool hand_present = false;
+     ////////////////////////////////////////////////////////////////////////
+     // Handle Leap Motion Packet
+     ////////////////////////////////////////////////////////////////////////
+     if ((*poll_frame_)(leap_packet_)) {          
+          if (leap_packet_.valid && prev_leap_packet_.valid) {               
+               if (leap_packet_.hands > 0) {
+                    hand_present = true;
+                    
+                    //double pitch_diff = leap_packet_.first.pitch;
+                    //double yaw_diff = 0 - leap_packet_.first.yaw;
+                    //double roll_diff = leap_packet_.first.roll;
+                    //
+                    //if (prev_leap_packet_.hands > 0) {
+                    //     pitch_diff = leap_packet_.first.pitch - prev_leap_packet_.first.pitch;
+                    //     yaw_diff = prev_leap_packet_.first.yaw - leap_packet_.first.yaw;
+                    //     roll_diff = leap_packet_.first.roll - prev_leap_packet_.first.roll;                    
+                    //     
+                    //} 
+                    //mCamera->pitch(Ogre::Radian(pitch_diff*SYLLO_PI/180.0));
+                    //mCamera->yaw(Ogre::Radian(yaw_diff*SYLLO_PI/180.0));
+                    //mCamera->roll(Ogre::Radian(roll_diff*SYLLO_PI/180.0));
+               }
+          }          
+
+          if (leap_packet_.hands == 0 && prev_leap_packet_.hands > 0) {
+               switch(state_) {
+               case Ball:
+                    mCamera->setPosition(Ogre::Vector3(0,0 ,2000));
+                    mCamera->lookAt(Ogre::Vector3(0,0,0));
+                    break;
+               case BeforeBang:
+                    break;
+               case GameOfLife:
+                    mCamera->setPosition(Ogre::Vector3(cols_/2*100, rows_/2*100 ,2000));
+                    mCamera->lookAt(Ogre::Vector3(cols_/2*100, rows_/2*100,-300));
+                    break;
+               default:
+                    break;
+               }
+          }
+
+          prev_leap_packet_ = leap_packet_;
+     }     
      
-     /// ////Ogre::SceneNode::ObjectIterator object_it = ((Ogre::SceneNode *)mSceneMgr->getRootSceneNode())->getAttachedObjectIterator();
-     /// //Ogre::Node::ChildNodeIterator node_it = mSceneMgr->getRootSceneNode()->getChildIterator();
-     /// //
-     /// //while (node_it.hasMoreElements()) {
-     /// //     //DumpNodes(ss, node_it.getNext(), level + 2);               
-     /// //     node_it.getNext();
-     /// //}
-     /// 
-     /// 
-     /// for(int x = 0; x < gol_->x_width(); x++) {
-     ///      for(int y = 0; y < gol_->y_height(); y++) {
-     ///           std::stringstream ss_x, ss_y;
-     ///           ss_x << x;
-     ///           ss_y << y;
-     ///      
-     ///           std::string name = "mySphere" + ss_y.str() + "_" + ss_x.str();
-     ///           //Ogre::Entity * ent = mSceneMgr->getEntity("mySphere5_5");
-     ///           Ogre::Entity * ent = mSceneMgr->getEntity(name);
-     ///      
-     ///           if (gol_->at(x,y).grid_type() == 1) {
-     ///                ent->setVisible(true);
-     ///           } else {
-     ///                ent->setVisible(false);
-     ///           }
-     /// 
-     ///           //Ogre::Node * node = ent->getParentNode();
-     ///           //Ogre::Vector3 pos = node->getPosition();
-     ///           //node->setPosition(pos.x, pos.y, pos.z+1);
-     ///           //cout << gol_->at(x,y).grid_type();
-     ///      }
-     ///      //cout << endl;
-     /// }     
+     // REALLY COOL ROTATION EFFECT!
+     //if ((*poll_frame_)(leap_packet_)) {          
+     //     if (leap_packet_.hands > 0) {
+     //          pitch_ = 0;
+     //          //cout << "Pitch: " << leap_packet_.first.pitch << endl;               
+     //          //mCamera->pitch(Ogre::Radian(leap_packet_.first.pitch*SYLLO_PI/180.0));
+     //     }
+     //}
+     ////mCamera->pitch(Ogre::Radian(pitch_*SYLLO_PI/180.0));
+     //mCamera->roll(Ogre::Radian(pitch_*SYLLO_PI/180.0));     
+
+     if (state_ == GameOfLife) {          
+          this->game_of_life();
+     } else {          
+          this->animate();
+     }
+     
+     switch(state_) {
+     case Ball_Entry:
+          this->setup_Ball();
+          next_state_ = Ball;          
+          break;
+     case Ball:
+          this->animate();
+          if (!hand_present) {
+               next_state_ = GameOfLife_Entry;
+          }
+          break;
+     case BeforeBang_Entry:
+          next_state_ = BeforeBang;
+          break;
+     case BeforeBang:
+          break;
+     case BigBang_Entry:
+          next_state_ = BigBang;
+          break;
+     case BigBang:
+          break;
+     case GameOfLife_Entry:
+          this->setup_GameOfLife();
+          next_state_ = GameOfLife;
+          break;
+     case GameOfLife:
+          this->game_of_life();
+          if (hand_present) {
+               next_state_ = Ball_Entry;
+          }
+          break;
+     default:
+          break;
+     }    
+     state_ = next_state_;
+
+     frame_++;              
 }
 
 double saturate(double in, double min, double max)

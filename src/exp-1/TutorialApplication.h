@@ -33,6 +33,18 @@ using std::endl;
 #define COLOR_STEP 0.05
 #define COLOR_RAND_MAX ((int)(1.0/COLOR_STEP))
 
+typedef enum State {
+     Ball_Entry, // rename to Ball_Entry
+     Ball,      // rename to Ball
+     BeforeBang_Entry,
+     BeforeBang, // 
+     BigBang_Entry,
+     BigBang,
+     GameOfLife_Entry,
+     GameOfLife    
+}State_t;
+     
+
 class MyNode
 {
 public:
@@ -41,8 +53,14 @@ public:
      void set_scene_node(Ogre::SceneNode *scene_node) { scene_node_ = scene_node; }
      Ogre::Entity *entity() { return ent_; }
      void set_entity(Ogre::Entity *ent) { ent_ = ent; }
-     void step_animate(int time);
-     void reset();
+     
+     void reset_ball_animate();
+     void ball_animate(int time);
+     void before_bang(int time);
+     
+     void reset_game_of_life();
+     void game_of_life(int time);          
+     
 
      void kill() { dying_ = true; }
      bool is_dead() { if (x_size_ <= -size_step_) { return true; } else {return false;}}
@@ -51,8 +69,7 @@ protected:
      
      Ogre::Entity *ent_;
      Ogre::SceneNode *scene_node_;
-     //std::string color_name_;
-
+     
      double x_size_;
      double y_size_;
      double z_size_;
@@ -64,6 +81,14 @@ protected:
      double x_phase_;
      double y_phase_;
      double z_phase_;
+
+     double x_amp_;
+     double y_amp_;
+     double z_amp_;
+
+     double x_freq_;
+     double y_freq_;
+     double z_freq_;
 
      bool dying_;
 
@@ -77,14 +102,22 @@ public:
      virtual ~TutorialApplication(void);
 
      Ogre::RenderWindow * getWindow(void) { return mWindow; }
-     Ogre::Timer * getTimer(void) { return mTimer; }
      OIS::Mouse * getMouse(void) { return mMouse; }
      OIS::Keyboard * getKeyboard(void) { return mKeyboard; }
+
 protected:
+     
+     State_t state_;
+     State_t next_state_;
+
      virtual void createScene(void);
      virtual void frame_loop();
-     Ogre::Timer *mTimer;
+     void game_of_life();
+     void animate();
 
+     void setup_GameOfLife();
+     void setup_Ball();
+     
      int rows_;
      int cols_;
 
