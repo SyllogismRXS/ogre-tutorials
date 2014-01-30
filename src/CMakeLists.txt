@@ -1,3 +1,4 @@
+add_subdirectory(syllo_serial)
 add_subdirectory(LeapGlue)
 add_subdirectory(game-of-life)
 add_subdirectory(hello-world)

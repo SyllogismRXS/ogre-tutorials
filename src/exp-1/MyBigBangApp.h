@@ -21,6 +21,7 @@
 #include <BaseApplication/BaseApplication.h>
 #include <LeapGlue/LeapGlue.h>
 #include <gol/GOL.h>
+#include <syllo_serial/serialib.h>
 
 #include <stdio.h>
 #include <stdlib.h> 
@@ -41,9 +42,28 @@ typedef enum State {
      BigBang_Entry,
      BigBang,
      GameOfLife_Entry,
-     GameOfLife    
+     GameOfLife,
+     BlackHole_Entry,
+     BlackHole
 }State_t;
      
+#define NUM_ROWS 50
+#define NUM_COLS 50
+
+#define BALL_ORIENT    (Ogre::Vector3(0,0,0))
+#define BALL_POSITION  (Ogre::Vector3(0,0,1000))
+
+#define BEFORE_BANG_ORIENT (Ogre::Vector3(0,0,0))
+#define BEFORE_BANG_POSITION (Ogre::Vector3(0,0,1000))
+
+#define BIGBANG_ORIENT (Ogre::Vector3(10,-10,0))
+#define BIGBANG_POSITION (Ogre::Vector3(0,0,1000))
+
+#define GOL_ORIENT (Ogre::Vector3(0,0,0))
+#define GOL_POSITION (Ogre::Vector3(NUM_COLS/2*100, NUM_ROWS/2*100,3000))
+
+#define BLACKHOLE_ORIENT (Ogre::Vector3(-30,45,-15))
+#define BLACKHOLE_POSITION (Ogre::Vector3(-500,-500,1000))
 
 class MyNode
 {
@@ -65,6 +85,15 @@ public:
      void kill() { dying_ = true; }
      bool is_dead() { if (x_size_ <= -size_step_) { return true; } else {return false;}}
 
+     void set_move_to_goal(bool move) { moving_to_goal_ = move; }
+     void set_goal(Ogre::Vector3 goal) { goal_ = goal; }
+     void move_to_goal_animate(int speed);
+     bool goal_reached(int threshold);
+     void breath(int time);
+     
+     void set_init_position(Ogre::Vector3 pos) { init_pos_ = pos; }
+     Ogre::Vector3 init_position() { return init_pos_; }
+
 protected:
      
      Ogre::Entity *ent_;
@@ -77,6 +106,7 @@ protected:
      double max_size_;
      double size_step_;
 
+     Ogre::Vector3 init_pos_;
      Ogre::Vector3 pos_;
      double x_phase_;
      double y_phase_;
@@ -92,6 +122,9 @@ protected:
 
      bool dying_;
 
+     Ogre::Vector3 goal_;
+     bool moving_to_goal_;        
+     
 private:
 };
 
@@ -104,9 +137,35 @@ public:
      Ogre::RenderWindow * getWindow(void) { return mWindow; }
      OIS::Mouse * getMouse(void) { return mMouse; }
      OIS::Keyboard * getKeyboard(void) { return mKeyboard; }
+     
+     void set_cam_orient_goal(Ogre::Vector3 goal) { cam_orient_goal_ = goal; }
+     void set_cam_pos_goal(Ogre::Vector3 goal) { cam_pos_goal_ = goal; }
+     void set_cam_move_to_goal(bool enable) { cam_moving_to_goal_ = cam_orienting_to_goal_ = enable; }
+     void cam_move_to_goal_animate(double look_speed, int pos_speed);
+     bool cam_goal_reached(int look_thresh, int pos_thresh);
+
+     //Ogre::Vector3 getLookAt();
+
+     void led_control(int num, bool enable);
 
 protected:
-     
+ 
+     int two_hands_missing_count_;
+
+     serialib serial_;
+     char txBuf[8];
+     char rxBuf[8];
+         
+     Ogre::Vector3 cam_lookat_goal_;
+     Ogre::Vector3 cam_pos_goal_;
+     Ogre::Vector3 cam_cur_lookat_;
+
+     bool cam_moving_to_goal_;
+     //bool cam_looking_at_goal_;
+
+     Ogre::Vector3 cam_orient_goal_; //yaw, pitch, roll
+     bool cam_orienting_to_goal_;
+
      State_t state_;
      State_t next_state_;
 
@@ -114,16 +173,21 @@ protected:
      virtual void frame_loop();
      void game_of_life();
      void animate();
-
+     bool blackhole_complete();
      void setup_GameOfLife();
+     void setup_BeforeBang();
      void setup_Ball();
-     
+     void setup_BigBang();
+     void setup_BlackHole();
+
      int rows_;
      int cols_;
 
      GOL *gol_;
      Ogre::Timer gol_timer_;
      Ogre::Timer animate_timer_;
+
+     Ogre::Timer state_timer_;
 
      std::map<std::string,Ogre::MaterialPtr> colors_;
      
@@ -136,7 +200,9 @@ protected:
      poll_frame_t poll_frame_;
      LeapPacket_t leap_packet_;
      LeapPacket_t prev_leap_packet_;
-     
+     bool prev_hand_present_;
+     bool prev_two_hands_present_;
+
 };
 
 std::string color_number(double r, double g, double b);

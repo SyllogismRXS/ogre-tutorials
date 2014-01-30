@@ -18,6 +18,7 @@ target_link_libraries(${APP_NAME}
   ${OGRE_LIBRARIES} 
   ${OIS_LIBRARIES}
   gol  
+  syllo_serial
   )
 
 
