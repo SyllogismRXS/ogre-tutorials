@@ -75,6 +75,7 @@ public:
      void set_entity(Ogre::Entity *ent) { ent_ = ent; }
      
      void reset_ball_animate();
+     void reset_beforebang_animate();
      void ball_animate(int time);
      void before_bang(int time);
      
@@ -155,7 +156,8 @@ protected:
      serialib serial_;
      char txBuf[8];
      char rxBuf[8];
-         
+     bool serial_enable_;
+
      Ogre::Vector3 cam_lookat_goal_;
      Ogre::Vector3 cam_pos_goal_;
      Ogre::Vector3 cam_cur_lookat_;

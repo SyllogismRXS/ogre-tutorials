@@ -125,6 +125,14 @@ void MyNode::reset_ball_animate()
      //double color_g = (rand() % COLOR_RAND_MAX) * COLOR_STEP;
      //double color_b = (rand() % COLOR_RAND_MAX) * COLOR_STEP;
      ent_->setMaterialName(color_number(0,0,1.0));
+     //scene_node_->setScale(Ogre::Vector3(max_size_,max_size_,max_size_));
+     //ent_->setVisible(true);
+}
+
+void MyNode::reset_beforebang_animate()
+{    
+     scene_node_->setScale(Ogre::Vector3(max_size_,max_size_,max_size_));
+     ent_->setVisible(true);
 }
 
 void MyNode::reset_game_of_life()
@@ -154,6 +162,8 @@ void MyNode::reset_game_of_life()
      //double color_g = (rand() % COLOR_RAND_MAX) * COLOR_STEP;
      //double color_b = (rand() % COLOR_RAND_MAX) * COLOR_STEP;
      ent_->setMaterialName(color_number(0,0,1.0));
+     scene_node_->setScale(Ogre::Vector3(max_size_,max_size_,max_size_));
+     ent_->setVisible(true);
 }
 
 
@@ -252,25 +262,32 @@ MyBigBangApp::MyBigBangApp(void)
      // connect to Arduino
      if (serial_.Open("/dev/ttyACM0", 115200) != 1) {
           cout << "Failed to open serial port!" << endl;
-          exit(-1);
+          serial_enable_ = false;
      }
      serial_.FlushReceiver();
      
+     serial_enable_ = true;
+     int try_count = 0;
      rxBuf[0] = 0;    
      while (rxBuf[0] != 'A') {
+          if(try_count >= 20) {
+               cout << "Failed to communicate with LED controller" << endl;
+               serial_enable_ = false;
+               break;
+          }
+          
           txBuf[0] = 'a';     
           if (serial_.Write(txBuf,1) != 1) {
                cout << "Failed during write" << endl;
-               exit(-1);
           }
           if (serial_.ReadChar(rxBuf,0) != 1) {
                cout << "Failed during read" << endl;
-               //exit(-1);
           }
           if (rxBuf[0] != 'A') {
                cout << "Failed to receive Acknowledge" << endl;
           }
-          serial_.FlushReceiver();
+          try_count++;
+          serial_.FlushReceiver();                    
      }
 
      led_control(0,false);
@@ -301,6 +318,10 @@ MyBigBangApp::~MyBigBangApp(void)
 
 void MyBigBangApp::led_control(int num, bool enable)
 {
+     if (!serial_enable_) {
+          return;
+     }
+     
      if (num == 0) {
           if (enable) {
                txBuf[0] = 'q';
@@ -332,8 +353,8 @@ void MyBigBangApp::setup_Ball()
                MyNode *node;
                node = (MyNode*)(gol_->at(x,y).data());
                
-               Ogre::SceneNode *scene_node;
-               scene_node = node->scene_node();
+               //Ogre::SceneNode *scene_node;
+               //scene_node = node->scene_node();
                //scene_node->setPosition(Ogre::Vector3(0,0,0));
                node->set_goal(Ogre::Vector3(0,0,0));               
                node->set_move_to_goal(true);
@@ -355,8 +376,8 @@ void MyBigBangApp::setup_BlackHole()
                MyNode *node;
                node = (MyNode*)(gol_->at(x,y).data());
                
-               Ogre::SceneNode *scene_node;
-               scene_node = node->scene_node();
+               //Ogre::SceneNode *scene_node;
+               //scene_node = node->scene_node();
                //scene_node->setPosition(Ogre::Vector3(0,0,0));
                node->set_goal(Ogre::Vector3(0,0,0));               
                node->set_move_to_goal(true);
@@ -387,8 +408,8 @@ void MyBigBangApp::setup_BeforeBang()
                MyNode *node;
                node = (MyNode*)(gol_->at(x,y).data());
                
-               Ogre::SceneNode *scene_node;
-               scene_node = node->scene_node();
+               //Ogre::SceneNode *scene_node;
+               //scene_node = node->scene_node();
                //scene_node->setPosition(Ogre::Vector3(0,0,0));
                
                double x_goal = ((rand() % (thickness*2)) - thickness);// + inner_radius;
@@ -400,7 +421,8 @@ void MyBigBangApp::setup_BeforeBang()
                z_goal += sign(z_goal)*inner_radius;               
 
                node->set_goal(Ogre::Vector3(x_goal, y_goal, z_goal));
-               node->set_move_to_goal(true);                              
+               node->set_move_to_goal(true);
+               node->reset_beforebang_animate();
                //node->reset_ball_animate();               
           }
      }
@@ -459,8 +481,8 @@ void MyBigBangApp::setup_GameOfLife()
                MyNode *node;               
                node = (MyNode*)(gol_->at(x,y).data());               
 
-               Ogre::SceneNode *scene_node;
-               scene_node = node->scene_node();
+               //Ogre::SceneNode *scene_node;
+               //scene_node = node->scene_node();
                //scene_node->setPosition(Ogre::Vector3(x*100,y*100,0));
                node->set_goal(node->init_position());
                node->reset_game_of_life();
@@ -475,7 +497,7 @@ void MyBigBangApp::setup_GameOfLife()
 
 //-------------------------------------------------------------------------------------
 void MyBigBangApp::createScene(void)
-{         
+{
      // Create map of colors:
      for(double r = 0; r <= 1.05; r += COLOR_STEP) {
           for(double g= 0; g <= 1.05; g += COLOR_STEP) {
@@ -599,9 +621,10 @@ bool MyBigBangApp::blackhole_complete()
      for(int x = 0; x < gol_->x_width(); x++) {
           for(int y = 0; y < gol_->y_height(); y++) {
                MyNode *node;
-               Ogre::Entity * ent;
+               //Ogre::Entity * ent;
+               //ent = node->entity();
                node = (MyNode*)(gol_->at(x,y).data());
-               ent = node->entity();
+               
                if (!node->goal_reached(200)) {
                     return false;
                }
