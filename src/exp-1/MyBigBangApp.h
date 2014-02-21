@@ -31,6 +31,7 @@ using std::cout;
 using std::endl;
 
 #define SYLLO_PI 3.14159265359
+#define DEG_2_RAD (SYLLO_PI/180.0)
 #define COLOR_STEP 0.05
 #define COLOR_RAND_MAX ((int)(1.0/COLOR_STEP))
 
@@ -80,7 +81,7 @@ public:
      void before_bang(int time);
      
      void reset_game_of_life();
-     void game_of_life(int time);          
+     void game_of_life(int time, double gol_time_step);          
      
 
      void kill() { dying_ = true; }
@@ -141,7 +142,7 @@ public:
      
      void set_cam_orient_goal(Ogre::Vector3 goal) { cam_orient_goal_ = goal; }
      void set_cam_pos_goal(Ogre::Vector3 goal) { cam_pos_goal_ = goal; }
-     void set_cam_move_to_goal(bool enable) { cam_moving_to_goal_ = cam_orienting_to_goal_ = enable; }
+     void set_cam_move_to_goal(bool enable) { cam_moving_to_goal_ = enable; cam_orienting_to_goal_ = enable; }
      void cam_move_to_goal_animate(double look_speed, int pos_speed);
      bool cam_goal_reached(int look_thresh, int pos_thresh);
 
@@ -151,6 +152,7 @@ public:
 
 protected:
  
+     unsigned int gol_time_step_;
      int two_hands_missing_count_;
 
      serialib serial_;

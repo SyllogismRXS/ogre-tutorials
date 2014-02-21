@@ -41,7 +41,8 @@ double angle_360(double angle)
 MyNode::MyNode()
 {
      max_size_ = 1;
-     size_step_ = 0.01;         
+     //size_step_ = 0.01;         
+     size_step_ = 0.05;
      moving_to_goal_ = false;
 }
 
@@ -167,21 +168,33 @@ void MyNode::reset_game_of_life()
 }
 
 
-void MyNode::game_of_life(int time)
+void MyNode::game_of_life(int time, double gol_time_step)
 {
+     //double curr_size_step = size_step_*max_size_/gol_time_step/1000.0;
+     //double curr_size_step = max_size_/(gol_time_step/1000.0);
+     double curr_size_step = max_size_ / (gol_time_step/1000.0) * size_step_;
+     if (curr_size_step > max_size_) {
+          curr_size_step = max_size_;
+     }
+
      if (dying_) {
-          if (x_size_ > -size_step_) {
-               x_size_ -= size_step_*3;
-               y_size_ -= size_step_*3;
-               z_size_ -= size_step_*3;
+          if (x_size_ > -curr_size_step) {
+               x_size_ -= curr_size_step*3;
+               y_size_ -= curr_size_step*3;
+               z_size_ -= curr_size_step*3;
+          } else {
+               x_size_ = 0;
+               y_size_ = 0;
+               z_size_ = 0;
           }
      } else {
           if (x_size_ < max_size_) {
-               x_size_ += size_step_;
-               y_size_ += size_step_;
-               z_size_ += size_step_;          
-          }
-     }
+               x_size_ += curr_size_step;
+               y_size_ += curr_size_step;
+               z_size_ += curr_size_step;          
+          }          
+     }     
+
      scene_node_->setScale(Ogre::Vector3(x_size_,y_size_,z_size_));
      
      double t = (time % 1000) / 1000.0;
@@ -259,6 +272,8 @@ MyBigBangApp::MyBigBangApp(void)
      
      two_hands_missing_count_ = 0;
 
+     gol_time_step_ = 4000;     
+
      // connect to Arduino
      if (serial_.Open("/dev/ttyACM0", 115200) != 1) {
           cout << "Failed to open serial port!" << endl;
@@ -305,9 +320,9 @@ MyBigBangApp::MyBigBangApp(void)
      animate_timer_.reset();
 
      gol_ = new GOL(cols_, rows_);
-     gol_->randomize();          
+     //gol_->randomize();
 }
-//-------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 MyBigBangApp::~MyBigBangApp(void)
 {
      delete gol_;
@@ -474,8 +489,9 @@ void MyBigBangApp::setup_BigBang()
 
 void MyBigBangApp::setup_GameOfLife()
 {
-     //mCamera->setPosition(Ogre::Vector3(cols_/2*100, rows_/2*100 ,2000));
-     
+     gol_time_step_ = 4000;
+     gol_->randomize();
+
      for(int x = 0; x < gol_->x_width(); x++) {
           for(int y = 0; y < gol_->y_height(); y++) {
                MyNode *node;               
@@ -636,9 +652,12 @@ bool MyBigBangApp::blackhole_complete()
 void MyBigBangApp::game_of_life()
 {
      bool update_gol = false;
-     if (gol_timer_.getMilliseconds() > 4000) {
+     if (gol_timer_.getMilliseconds() > gol_time_step_) {
           gol_timer_.reset();
           update_gol = true;
+          if (gol_time_step_ > 10) {
+               gol_time_step_ = (unsigned int)(((double)gol_time_step_) * 0.95);
+          }
      }
 
      for(int x = 0; x < gol_->x_width(); x++) {
@@ -652,7 +671,7 @@ void MyBigBangApp::game_of_life()
                     node->move_to_goal_animate(15);
                     update_gol = false;
                } else {
-                    node->game_of_life(animate_timer_.getMilliseconds());
+                    node->game_of_life(animate_timer_.getMilliseconds(), gol_time_step_);
 
                     if (update_gol) {                    
                          if (gol_->at(x,y).grid_type() == 1) {
@@ -730,13 +749,13 @@ void MyBigBangApp::cam_move_to_goal_animate(double look_speed, int pos_speed)
                roll_step *= -1;
           }
           
-          mCamera->yaw(Ogre::Radian(yaw_step*SYLLO_PI/180.0));
-          mCamera->pitch(Ogre::Radian(pitch_step*SYLLO_PI/180.0));          
-          mCamera->roll(Ogre::Radian(roll_step*SYLLO_PI/180.0));
+          mCamera->yaw(Ogre::Radian(yaw_step*DEG_2_RAD));
+          mCamera->pitch(Ogre::Radian(pitch_step*DEG_2_RAD));          
+          mCamera->roll(Ogre::Radian(roll_step*DEG_2_RAD));
           
-          if (yaw_step < 0.01 && pitch_step < 0.01 && roll_step < 0.01) {
-               cam_orienting_to_goal_ = false;
-          }
+          //if (yaw_step < 0.001 && pitch_step < 0.001 && roll_step < 0.001) {
+          //     cam_orienting_to_goal_ = false;
+          //}
 
      }          
 }
@@ -746,6 +765,15 @@ bool MyBigBangApp::cam_goal_reached(int look_thresh, int pos_thresh)
      if (cam_moving_to_goal_) {
           if ((mCamera->getPosition().distance(cam_pos_goal_)) < pos_thresh) {
                cam_moving_to_goal_ = false;
+          }
+     }
+
+     if (cam_orienting_to_goal_) {
+          Ogre::Quaternion quat = mCamera->getOrientation();
+          if ((abs(quat.getYaw().valueDegrees() - cam_orient_goal_.x) < 1) && 
+              (abs(quat.getPitch().valueDegrees() - cam_orient_goal_.y) < 1) &&
+              (abs(quat.getRoll().valueDegrees() - cam_orient_goal_.z) < 1)) {
+               cam_orienting_to_goal_ = false;
           }
      }
           
@@ -783,9 +811,9 @@ void MyBigBangApp::frame_loop()
                          yaw_diff = prev_leap_packet_.first.yaw - leap_packet_.first.yaw;
                          roll_diff = leap_packet_.first.roll - prev_leap_packet_.first.roll;                    
                          
-                         //mCamera->pitch(Ogre::Radian(pitch_diff*SYLLO_PI/180.0));
-                         //mCamera->yaw(Ogre::Radian(yaw_diff*SYLLO_PI/180.0));
-                         //mCamera->roll(Ogre::Radian(roll_diff*SYLLO_PI/180.0));
+                         //mCamera->pitch(Ogre::Radian(pitch_diff*DEG_2_RAD));
+                         //mCamera->yaw(Ogre::Radian(yaw_diff*DEG_2_RAD));
+                         //mCamera->roll(Ogre::Radian(roll_diff*DEG_2_RAD));
                     } 
                     if (leap_packet_.hands > 1) {
                          if (leap_packet_.second.avg_pos.z > 40) {
@@ -823,11 +851,11 @@ void MyBigBangApp::frame_loop()
      //     if (leap_packet_.hands > 0) {
      //          pitch_ = 0;
      //          //cout << "Pitch: " << leap_packet_.first.pitch << endl;               
-     //          //mCamera->pitch(Ogre::Radian(leap_packet_.first.pitch*SYLLO_PI/180.0));
+     //          //mCamera->pitch(Ogre::Radian(leap_packet_.first.pitch*DEG_2_RAD));
      //     }
      //}
-     ////mCamera->pitch(Ogre::Radian(pitch_*SYLLO_PI/180.0));
-     //mCamera->roll(Ogre::Radian(pitch_*SYLLO_PI/180.0));     
+     ////mCamera->pitch(Ogre::Radian(pitch_*DEG_2_RAD));
+     //mCamera->roll(Ogre::Radian(pitch_*DEG_2_RAD));     
 
      //if (state_ == GameOfLife) {          
      //     this->game_of_life();
@@ -875,7 +903,7 @@ void MyBigBangApp::frame_loop()
           this->animate();
           if (!two_hands_present) {
                two_hands_missing_count_++;
-               if (two_hands_missing_count_ >= 20) {
+               if (two_hands_missing_count_ >= 70) { // was *20
                     two_hands_missing_count_ = 0;
                     next_state_ = BeforeBang_Entry;
                }
@@ -883,27 +911,21 @@ void MyBigBangApp::frame_loop()
                two_hands_missing_count_ = 0;
           }
 
-          if (state_timer_.getMilliseconds() > 1000*10) {
+          if (state_timer_.getMilliseconds() > 1000*7) { // was *10
                next_state_ = GameOfLife_Entry;
           }
           break;
+
      case GameOfLife_Entry:
           this->setup_GameOfLife();
           next_state_ = GameOfLife;
           break;
+
      case GameOfLife:                              
           this->game_of_life();
           if (state_timer_.getMilliseconds() > 1000*100) {
                next_state_ = BlackHole_Entry;
-          }
-
-          if(!hand_present && prev_hand_present_) {
-               set_cam_move_to_goal(true);
-          }
-
-          if(hand_present && !prev_hand_present_) {
-               set_cam_move_to_goal(false);
-          }          
+          }                    
 
           break;
      case BlackHole_Entry:
@@ -911,25 +933,33 @@ void MyBigBangApp::frame_loop()
           next_state_ = BlackHole;
           break;
 
-     case BlackHole:          
+     case BlackHole:                    
           this->animate();          
           
           if (blackhole_complete()) {
                next_state_ = Ball_Entry;
           }
 
-          if(!hand_present && prev_hand_present_) {
-               set_cam_move_to_goal(true);
-          }
-
-          if(hand_present && !prev_hand_present_) {
-               set_cam_move_to_goal(false);
-          }
+          //if(!hand_present && prev_hand_present_) {
+          //     set_cam_move_to_goal(true);
+          //}
+          //
+          //if(hand_present && !prev_hand_present_) {
+          //     set_cam_move_to_goal(false);
+          //}
 
           break;
      default:
           break;
      }    
+
+     if(!hand_present && prev_hand_present_) {
+          set_cam_move_to_goal(true);
+     }
+
+     if(hand_present && !prev_hand_present_) {
+          set_cam_move_to_goal(false);
+     }
 
      if (!cam_goal_reached(1, 10)) {
           cam_move_to_goal_animate(10,10);
@@ -942,10 +972,28 @@ void MyBigBangApp::frame_loop()
      prev_hand_present_ = hand_present;     
      prev_two_hands_present_ = two_hands_present;
 
-     if (allow_hand_look && hand_present) {
-          mCamera->pitch(Ogre::Radian(pitch_diff*SYLLO_PI/180.0));
-          mCamera->yaw(Ogre::Radian(yaw_diff*SYLLO_PI/180.0));
-          mCamera->roll(Ogre::Radian(roll_diff*SYLLO_PI/180.0));
+     if (allow_hand_look && hand_present) {                    
+          int pitch_limit = 70;
+          Ogre::Radian originalPitch = mCamera->getOrientation().getPitch();
+          Ogre::Radian newPitch = Ogre::Radian(pitch_diff*DEG_2_RAD) + originalPitch; 
+          if(newPitch > Ogre::Radian(-pitch_limit*DEG_2_RAD) && newPitch < Ogre::Radian(pitch_limit*DEG_2_RAD)){
+               mCamera->pitch(Ogre::Radian(pitch_diff*DEG_2_RAD));
+          }
+
+          int roll_limit = 35;
+          Ogre::Radian originalRoll = mCamera->getOrientation().getRoll();
+          Ogre::Radian newRoll = Ogre::Radian(roll_diff*DEG_2_RAD) + originalRoll; 
+          if(newRoll > Ogre::Radian(-roll_limit*DEG_2_RAD) && newRoll < Ogre::Radian(roll_limit*DEG_2_RAD)){
+               mCamera->roll(Ogre::Radian(roll_diff*DEG_2_RAD));
+          }
+
+          int yaw_limit = 70;
+          Ogre::Radian originalYaw = mCamera->getOrientation().getYaw();
+          Ogre::Radian newYaw = Ogre::Radian(yaw_diff*DEG_2_RAD) + originalYaw; 
+          if(newYaw > Ogre::Radian(-yaw_limit*DEG_2_RAD) && newYaw < Ogre::Radian(yaw_limit*DEG_2_RAD)){
+               mCamera->yaw(Ogre::Radian(yaw_diff*DEG_2_RAD));
+          }
+          
           mCamera->moveRelative(Ogre::Vector3(0,0, move_diff));
      }
 
